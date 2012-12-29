@@ -1,16 +1,17 @@
 (ns nio2.file
   (:require [clojure.java.io :as io])
-  (:import [java.nio.file FileSystems Path]))
+  (:import [java.io File]
+           [java.nio.file FileSystems Path]))
 
-(def ^:dynamic
+(defonce ^:dynamic
   *file-system*
   (FileSystems/getDefault))
 
 (extend Path
-  io/Coercions
+  clojure.java.io/Coercions
   {:as-file (fn [^Path p] (.toFile p))
    :as-url (fn [^Path p] (.toURL (.toURI p)))}
-  io/IOFactory
+  clojure.java.io/IOFactory
   (assoc io/default-streams-impl
     :make-input-stream (fn [^Path x opts] (io/make-input-stream (.toFile x) opts))
     :make-output-stream (fn [^Path x opts] (io/make-output-stream (.toFile x) opts))))
@@ -22,3 +23,8 @@
   "Generates a java.nio.file.Path object corresponding to the
    target of the catenation of the parts of the path supplied."
   (.getPath *file-system* fst (into-array String more)))
+
+(defn file-like? [x]
+  "Determines whether an object can be treated like a File object."
+  (when-let [^File f (io/as-file x)]
+    (.isFile f)))
