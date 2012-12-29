@@ -10,18 +10,23 @@
 (ns nio2.file.watcher
   (:use [nio2.file]
         [nio2.util :only [accepts-arity?]])
+  (:require [clojure.set :as set])
   (:import [java.io File]
            [java.nio.file FileSystems Path StandardWatchEventKinds WatchService
             WatchKey]))
 
 ;; ## Convience wrappers for `java.nio.file` types
 
-(def watch-events-map
+(def watch-keyword-event-map
   "Mapping of clojure symbols to watch event kinds."
   {:create StandardWatchEventKinds/ENTRY_CREATE
    :delete StandardWatchEventKinds/ENTRY_DELETE
    :modify StandardWatchEventKinds/ENTRY_MODIFY
    :overflow StandardWatchEventKinds/OVERFLOW})
+
+(def watch-event-keyword-map
+  "Mapping of watch event kinds to clojure symbols."
+  (set/map-invert watch-keyword-event-map))
 
 (defn ^WatchService create-watch-service
   "Create a new WatchService on the active file system
@@ -46,7 +51,7 @@
    The events should be a collection of keywords identifying the
    change type; `:create`, `:modify`, or `:delete`."
   [^Path p ^WatchService service events]
-  (let [e (map #(% watch-events-map) events)]
+  (let [e (map #(% watch-keyword-event-map) events)]
     (.register p service (into-array e))))
 
 ;; ## Watch map creation
@@ -64,8 +69,10 @@
   ;; TODO: Change into a macro and flatten
   (fn [paths]
     (doseq [callback callbacks]
-      (doseq [path paths]
-        (callback path)))))
+      (doseq [[path event] paths]
+        (if (accepts-arity? callback 2)
+          (callback path event)
+          (callback path))))))
 
 (defn build-filter-fn
   "Build a function that aggregates all the registered filters in
@@ -83,10 +90,11 @@
   (let [final-filter (build-filter-fn filters)
         valid? #(not= (.kind %) StandardWatchEventKinds/OVERFLOW)]
     (fn [^WatchKey watch-key]
-      (let [^Path target (key-map watch-key)
-            events (filter valid? (.pollEvents watch-key))
-            resolve-context (fn ^Path [e] (->> e .context (.resolve target)))]
-        (map resolve-context events)))))
+      (let [^Path target (key-map watch-key)]
+        (for [event (.pollEvents watch-key)
+              :when (valid? event)]
+          [(->> event .context (.resolve target))
+           (get watch-event-keyword-map (.kind event))])))))
 
 (defn watcher*
   "Create a watch-map for the specified paths and events"
