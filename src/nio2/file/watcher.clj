@@ -65,14 +65,14 @@
   "Build a function to execute all the registered on-change
    handlers."
   [callbacks]
-  ;; TODO: Test for arity
-  ;; TODO: Change into a macro and flatten
-  (fn [paths]
-    (doseq [callback callbacks]
+  ;; Split our functions into groups of one and two arity.
+  (let [[arity1 arity2] ((juxt filter remove) #(accepts-arity? % 2) callbacks)]
+    (fn [paths]
       (doseq [[path event] paths]
-        (if (accepts-arity? callback 2)
-          (callback path event)
-          (callback path))))))
+        (doseq [fn1 arity1]
+          (fn1 path))
+        (doseq [fn2 arity2]
+          (fn2 path event))))))
 
 (defn build-filter-fn
   "Build a function that aggregates all the registered filters in
