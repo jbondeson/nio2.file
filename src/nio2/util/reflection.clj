@@ -1,4 +1,4 @@
-(ns nio2.util
+(ns nio2.util.reflection
   (:import [clojure.lang IFn Var]
            [java.lang.reflect Method]))
 

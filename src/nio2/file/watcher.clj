@@ -8,7 +8,7 @@
 ;; [1] https://github.com/ibdknox/watchtower
 (ns nio2.file.watcher
   (:use [nio2.file]
-        [nio2.util :only [accepts-arity?]])
+        [nio2.util.reflection :only [accepts-arity?]])
   (:require [clojure.set :as set])
   (:import [java.io File]
            [java.nio.file FileSystems Path StandardWatchEventKinds WatchService
