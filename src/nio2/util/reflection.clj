@@ -1,8 +1,21 @@
+;; ## Reflection Utilities
+;;
+;; Some basic utilities for reflecting on functions and objects and
+;; querying their capabilities. 
 (ns nio2.util.reflection
   (:import [clojure.lang IFn Var]
            [java.lang.reflect Method]))
 
-;;https://gist.github.com/654851
+;; ## Arity Checking
+;;
+;; Check to see if a given function (or function-like object, say a
+;; macro) accepts a given arity. Surprisingly, this is a non-trivial
+;; task to accomplish. Initial work derived from [1].
+;;
+;; [1] https://gist.github.com/654851
+
+;; Helper methods for `accepts-arity?`
+
 (defn- declared-methods
   [^Class class]
   (filter #(= class (.getDeclaringClass ^Method %))
@@ -30,7 +43,7 @@
    (:arglists (meta func))))
 
 (defmulti
-  #^{:doc "Internal helper for accepts-arity"
+  #^{:doc "Internal helper multimethod for `accepts-arity?` function."
      :private true
      :argslists '([func arity])}
   int-accepts-arity?
@@ -48,7 +61,14 @@
     (reflection-accepts-arity? (deref func) arity)
     (metadata-accepts-arity? func arity)))
 
+;; Public Interface
+
 (defn accepts-arity?
+  "Determines whether a given function (or function-like object)
+   accepts a certain number of arguments. Variadic functions return
+   true for any number equal to or greater than the number of
+   required arguments in the signature (e.g `[x & more]` returns true
+   for values one and greater)."
   [func arity]
   (int-accepts-arity? func arity))
 
