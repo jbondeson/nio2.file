@@ -1,10 +1,9 @@
 ;; ## Efficient File and Directory Watching
 ;;
-;; The More New I/O APIs for the Java Platform, more succinctly
-;; referred to as NIO.2, (finally) bring abstracted file-system
-;; watching capabilities to the JVM. The `nio2.file.watcher` namespace
-;; provides a clojure wrapper for this functionality. The API was
-;; inspired by the 'watchtower'[1] library written by Chris Granger.
+;; With NIO.2 Java (finally) has an abstracted file-system  watching
+;; capabilities to the JVM. The `nio2.file.watcher` namespace provides
+;; a clojure wrapper for this functionality. The API was inspired by
+;; the 'watchtower'[1] library written by Chris Granger.
 ;;
 ;; [1] https://github.com/ibdknox/watchtower
 (ns nio2.file.watcher
@@ -15,7 +14,7 @@
            [java.nio.file FileSystems Path StandardWatchEventKinds WatchService
             WatchKey]))
 
-;; ## Convience wrappers for `java.nio.file` types
+;; ## Convience wrappers for file system types
 
 (def watch-keyword-event-map
   "Mapping of clojure symbols to watch event kinds."
